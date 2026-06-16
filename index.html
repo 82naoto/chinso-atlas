@@ -47,6 +47,11 @@ a.svc:hover{border-color:var(--hot);}
 .disc a{color:var(--cool);}
 
 footer{margin-top:30px;text-align:center;font-family:'Bebas Neue';letter-spacing:.16em;color:var(--muted);font-size:.85rem;}
+
+/* サイト情報リンク */
+.legalnav{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.legalnav a{flex:1;min-width:120px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 8px;color:var(--paper);text-decoration:none;font-size:.84rem;font-weight:500;transition:border-color .15s,color .15s;}
+.legalnav a:hover{border-color:var(--hot);color:var(--hot);}
 </style>
 </head>
 <body>
@@ -97,6 +102,13 @@ footer{margin-top:30px;text-align:center;font-family:'Bebas Neue';letter-spacing
   <div class="disc">
     本サイトの各ツールは、首都高速道路株式会社が公開する公式料金表および公式ルート検索をもとに作成した非公式ツールです。最新の料金・通行止め・出入口の利用可否は、必ず<a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高速道路 公式サイト</a>でご確認ください。本サイトの情報の誤りによって生じた損害について、運営者は責任を負いかねます。
   </div>
+
+  <div class="sec-h">サイト情報</div>
+  <nav class="legalnav">
+    <a href="//about">運営者情報</a>
+    <a href="/privacy">プライバシーポリシー</a>
+    <a href="/contact">お問い合わせ</a>
+  </nav>
 
   <footer>CHINSO ATLAS</footer>
 </div>
