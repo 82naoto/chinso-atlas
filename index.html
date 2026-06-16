@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>珍走ATLAS｜首都高を賢く使う非公式ツール集</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+:root{--ink:#14181f;--paper:#f4f1ea;--line:#2a3340;--hot:#ff5430;--cool:#1f6feb;--gold:#e8b13c;--muted:#7b8494;--ok:#34c759;--card:#1b212b;--ring:#9b6dff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--ink);color:var(--paper);min-height:100vh;line-height:1.6;
+ background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px);}
+.wrap{max-width:780px;margin:0 auto;padding:24px 16px 90px;}
+
+header{border-bottom:3px solid var(--hot);padding-bottom:14px;margin-bottom:22px;}
+.kicker{font-family:'Bebas Neue';letter-spacing:.22em;color:var(--hot);font-size:.95rem;}
+h1{font-weight:900;font-size:1.7rem;letter-spacing:.02em;line-height:1.18;}
+.sub{margin-top:6px;font-size:.8rem;color:var(--muted);}
+
+.sec-h{font-family:'Bebas Neue';letter-spacing:.14em;font-size:1.25rem;color:var(--paper);margin:26px 2px 12px;display:flex;align-items:center;gap:10px;}
+.sec-h::before{content:"";width:14px;height:14px;background:var(--hot);border-radius:2px;transform:rotate(45deg);flex-shrink:0;}
+
+/* サービスカード */
+.svc{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 16px;margin-bottom:12px;transition:border-color .15s,transform .1s;}
+.svc:active{transform:translateY(1px);}
+a.svc:hover{border-color:var(--hot);}
+.svc-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.svc-no{font-family:'Bebas Neue';font-size:1.15rem;color:var(--gold);min-width:26px;}
+.svc-name{font-weight:700;font-size:1.2rem;}
+.svc-arrow{margin-left:auto;color:var(--hot);font-weight:900;font-size:1.2rem;}
+.svc-desc{margin-top:8px;font-size:.86rem;color:var(--paper);opacity:.85;line-height:1.65;}
+.svc-url{margin-top:7px;font-family:'Bebas Neue';font-size:.85rem;letter-spacing:.06em;color:var(--cool);}
+.svc.soon{opacity:.6;}
+.svc.soon .svc-name{color:var(--muted);}
+.svc.soon .svc-arrow{color:var(--muted);}
+.soon-tag{display:inline-block;font-size:.62rem;background:var(--line);color:var(--paper);padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.08em;}
+
+/* 理念 */
+.creed{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:16px 16px;font-size:.9rem;line-height:1.8;color:var(--paper);}
+.creed b{color:var(--hot);font-weight:700;}
+
+/* 出典・免責 */
+.disc{margin-top:14px;font-size:.74rem;color:var(--muted);line-height:1.75;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:10px;padding:14px 15px;}
+.disc a{color:var(--cool);}
+
+footer{margin-top:30px;text-align:center;font-family:'Bebas Neue';letter-spacing:.16em;color:var(--muted);font-size:.85rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">珍走ATLAS — CHINSO ATLAS</div>
+    <h1>首都高を「賢く」使う<br>非公式ツール集</h1>
+    <div class="sub">首都高速道路を「降りずに」「賢く」使うための、目的特化型の非公式ナビゲーションツール。</div>
+  </header>
+
+  <div class="sec-h">提供サービス</div>
+
+  <a class="svc" href="/chinso/300yen">
+    <div class="svc-top">
+      <span class="svc-no">01</span>
+      <span class="svc-name">首都高 格安周回ファインダー</span>
+      <span class="svc-arrow">→</span>
+    </div>
+    <div class="svc-desc">下限料金(300円)のまま首都高を大きく周回できる入口を、現在地から近い順に提案します。「安く長く首都高を走りたい」という目的に特化したツールです。</div>
+    <div class="svc-url">/chinso/300yen</div>
+  </a>
+
+  <a class="svc" href="/chinso/pa-pa">
+    <div class="svc-top">
+      <span class="svc-no">02</span>
+      <span class="svc-name">首都高PAナビ</span>
+      <span class="svc-arrow">→</span>
+    </div>
+    <div class="svc-desc">首都高を降りずに、現在いるPA・SAから目的のPA・SAへ向かう経路を案内します。一般道を経由しない、首都高内だけのPAホッピングに特化したツールです。</div>
+    <div class="svc-url">/chinso/pa-pa</div>
+  </a>
+
+  <div class="svc soon">
+    <div class="svc-top">
+      <span class="svc-no">03</span>
+      <span class="svc-name">準備中</span>
+      <span class="soon-tag" style="margin-left:auto">COMING SOON</span>
+    </div>
+    <div class="svc-desc">新しいツールを準備しています。</div>
+  </div>
+
+  <div class="sec-h">理念</div>
+  <div class="creed">
+    <b>珍走ATLAS</b>は、首都高速道路の複雑な路線網・料金体系・一方通行構造を整理し、目的に応じた経路選びを助ける非公式プロジェクトです。公式の料金表やルート検索だけでは答えにくい「したい走り方」に、公式公開情報を再構成した特化ツールで応えます。
+  </div>
+
+  <div class="sec-h">出典・免責</div>
+  <div class="disc">
+    本サイトの各ツールは、首都高速道路株式会社が公開する公式料金表および公式ルート検索をもとに作成した非公式ツールです。最新の料金・通行止め・出入口の利用可否は、必ず<a href="https://www.shutoko.jp/" target="_blank" rel="noopener">首都高速道路 公式サイト</a>でご確認ください。本サイトの情報の誤りによって生じた損害について、運営者は責任を負いかねます。
+  </div>
+
+  <footer>CHINSO ATLAS</footer>
+</div>
+</body>
+</html>

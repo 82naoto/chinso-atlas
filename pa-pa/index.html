@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>首都高PAナビ | 珍走ATLAS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+:root {
+  --ink:#14181f; --asphalt:#14181f; --asphalt-2:#1b212b;
+  --card:#1b212b; --line:#2a3340;
+  --paper:#f4f1ea; --white:#f4f1ea; --dim:#7b8494; --muted:#7b8494;
+  --hot:#ff5430; --cool:#1f6feb; --gold:#e8b13c; --ok:#34c759; --ring:#9b6dff;
+  --amber:#e8b13c; --amber-deep:#14181f;
+  --sign-edge: var(--line);
+  --lane: rgba(244,241,234,.30);
+  --radius: 11px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Zen Kaku Gothic New', "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  min-height: 100dvh; line-height:1.6;
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom));
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px);
+}
+.wrap { max-width: 560px; margin: 0 auto; }
+
+header { border-bottom:3px solid var(--hot); padding-bottom:13px; margin: 4px 2px 20px; }
+header a.brand { display:block; font-family:'Bebas Neue'; font-size:.95rem; font-weight:400; letter-spacing:.22em; color:var(--hot); text-decoration:none; margin-bottom:3px; }
+header h1 { font-size: 1.5rem; font-weight:900; letter-spacing:.02em; line-height:1.18; }
+header .sub { margin-top:5px; font-size:.78rem; color:var(--muted); font-weight:500; }
+
+/* ---- 入力部パネル ---- */
+.board {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 14px 14px;
+}
+.field { margin-bottom: 12px; }
+.field label {
+  display:block; font-size: 10.5px; font-weight: 700; letter-spacing: .16em;
+  color: var(--muted); margin: 0 2px 6px;
+}
+.field select {
+  width: 100%;
+  appearance: none; -webkit-appearance: none;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--paper);
+  font: inherit; font-size: 16px; font-weight: 700;
+  padding: 13px 40px 13px 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23ff5430' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.field select:focus-visible { outline: 2px solid var(--hot); outline-offset: 1px; }
+.roadhint { font-size: 11.5px; color: var(--muted); margin: 5px 2px 0; min-height: 1em; font-weight: 500; }
+
+.rowctl { display:flex; gap:10px; align-items:stretch; margin-top: 4px; }
+button { font: inherit; cursor: pointer; }
+#swap {
+  flex: 0 0 52px;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--paper); font-size: 20px;
+}
+#go {
+  flex: 1;
+  background: var(--hot);
+  color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 16px; font-weight: 800; letter-spacing: .12em;
+  padding: 13px;
+}
+#go:active, #swap:active { transform: translateY(1px); }
+#go:focus-visible, #swap:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---- 結果 ---- */
+#result { margin-top: 22px; }
+.totalbar {
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding: 0 4px 10px;
+}
+.totalbar .nums { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; color:var(--paper); }
+.totalbar .nums small { font-size: 13px; font-weight: 700; color: var(--dim); margin-left: 2px; }
+.totalbar .lbl { font-family:'Bebas Neue'; font-size: 13px; letter-spacing:.18em; color: var(--muted); font-weight: 400; }
+
+/* ---- 路線概略マップ (Apple Maps風ライト) ---- */
+.mapbox {
+  background: #f7f5ef;
+  border: 1px solid #e6e2d6;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  padding: 6px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.35);
+}
+.mapbox svg { display:block; width:100%; height:auto; border-radius: 10px; }
+.net-casing { stroke:#9aa3b0; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.net { stroke:#cdd5de; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.route-casing { stroke:#1565d8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.routeline {
+  stroke:#3f8efc; fill:none;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+.routeflow {
+  stroke:#dbeafe; fill:none; opacity:.95;
+  stroke-linecap:round; stroke-linejoin:round;
+  animation: flow 1.4s linear infinite;
+}
+@keyframes flow { to { stroke-dashoffset: -14; } }
+@media (prefers-reduced-motion: reduce){ .routeflow{ animation:none; } }
+.padot { fill:#ffffff; stroke:#8e98a5; }
+.padot.onroute { fill:#ffffff; stroke:#0a84ff; }
+.padot.start { fill:#0a84ff; stroke:#ffffff; }
+.padot.goal { fill:#ff3b30; stroke:#ffffff; }
+.jctmark { fill:#ffffff; stroke:#9b958a; }
+.maplbl { fill:#3a3a3f; font-weight:800; paint-order:stroke; stroke:#f7f5ef; stroke-width:2.8px; }
+.maplbl.dim { fill:#8e8e93; font-weight:700; }
+.maplbl.onpill { fill:#ffffff; stroke:none; font-weight:800; }
+.maplbl.strong { fill:#1d4e89; stroke:none; font-weight:800; }
+.gmark { fill:#0a84ff; }
+.maplegend { display:flex; flex-wrap:wrap; gap:10px 14px; padding:9px 8px 3px; }
+.maplegend span { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:#5b5b60; }
+.maplegend .lg { width:11px; height:11px; border-radius:50%; display:inline-block; }
+.maplegend .lg.start { background:#0a84ff; box-shadow:0 0 0 1.5px #fff inset; }
+.maplegend .lg.goal { background:#ff3b30; box-shadow:0 0 0 1.5px #fff inset; }
+.maplegend .lg.pass { background:#fff; border:2px solid #0a84ff; }
+.maplegend .lg.jct { width:9px; height:9px; border-radius:1px; transform:rotate(45deg); background:#fff; border:1.5px solid #9b958a; }
+.maplegend .lg.route { width:16px; height:4px; border-radius:2px; background:#3f8efc; }
+.gpsdot { fill:#0a84ff; stroke:#fff; stroke-width:2; }
+.gpspulse { fill:none; stroke:#0a84ff; stroke-width:2; opacity:.8; animation: gps 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes gps { from { transform:scale(.4); opacity:.9; } to { transform:scale(2.2); opacity:0; } }
+@media (prefers-reduced-motion: reduce){ .gpspulse{ animation:none; opacity:.4; } }
+#gps { flex:0 0 52px; background:var(--ink); border:1px solid var(--line); border-radius:8px; color:var(--paper); font-size:18px; }
+#gps.on { border-color:var(--hot); color:var(--hot); box-shadow:0 0 0 1px var(--hot) inset; }
+#gps:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* 標識パネル列 + 中央白線 */
+.route { position: relative; padding-left: 26px; }
+.route::before {
+  content:""; position:absolute; left: 9px; top: 8px; bottom: 8px; width: 4px;
+  background: repeating-linear-gradient(180deg, rgba(255,84,48,.55) 0 18px, transparent 18px 30px);
+  border-radius: 2px;
+}
+.step {
+  position: relative;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  animation: drop .3s ease both;
+}
+.step::before {
+  content:""; position:absolute; left: -22.5px; top: 50%; transform: translateY(-50%);
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--hot); border: 3px solid var(--ink);
+  box-shadow: 0 0 0 1.5px rgba(255,84,48,.4);
+}
+@keyframes drop { from { opacity:0; transform: translateY(6px); } }
+.step .name { font-size: 17px; font-weight: 800; }
+.step .road { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+.step.pa { border-color: var(--gold); }
+.step.pa .name::before { content:"P"; display:inline-block; background:var(--gold); color:var(--ink);
+  font-weight:900; font-size:12px; width:18px; height:18px; line-height:18px; text-align:center;
+  border-radius:4px; margin-right:8px; vertical-align: 2px; }
+.step.via { background: var(--asphalt-2); border-color: var(--line); padding: 8px 14px; }
+.step.via .name { font-size: 13.5px; font-weight: 700; color: var(--dim); }
+.step .km {
+  position:absolute; right: 12px; top: 12px;
+  font-family:'Bebas Neue'; font-size: 14px; letter-spacing:.03em; color: var(--cool); font-variant-numeric: tabular-nums;
+}
+.badge-turn {
+  display:inline-block; background: var(--gold); color: var(--ink);
+  font-size: 10.5px; font-weight: 900; letter-spacing:.1em;
+  border-radius: 20px; padding: 2px 9px; margin-left: 8px; vertical-align: 2px;
+}
+.badge-pass {
+  display:inline-block; background: var(--line); color: var(--paper);
+  font-size: 10.5px; font-weight: 700; letter-spacing:.1em;
+  border-radius: 20px; padding: 2px 9px; margin-left: 8px; vertical-align: 2px;
+}
+
+/* 警告(到達不能) */
+.warnsign {
+  border: 1px solid var(--hot);
+  background: rgba(255,84,48,.07);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.warnsign .t { color: var(--hot); font-weight: 900; font-size: 15px; letter-spacing:.04em; margin-bottom: 6px; }
+.warnsign .b { font-size: 13.5px; line-height: 1.7; color: var(--paper); }
+
+.note { font-size: 11px; color: var(--muted); line-height: 1.8; margin-top: 26px; padding: 14px 13px; background:rgba(255,255,255,.02); border:1px solid var(--line); border-radius:10px; }
+.sister { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.sister a { flex:1; min-width:160px; text-align:center; text-decoration:none; color:var(--paper); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:11px 10px; font-size:.82rem; font-weight:700; }
+.sister a:hover { border-color:var(--hot); }
+.disc { margin-top:14px; font-size:.72rem; color:var(--muted); line-height:1.75; background:rgba(255,255,255,.02); border:1px solid var(--line); border-radius:10px; padding:14px 13px; }
+.foot { margin-top:26px; text-align:center; font-family:'Bebas Neue'; letter-spacing:.16em; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/chinso/">珍走ATLAS — CHINSO ATLAS</a>
+    <h1>首都高PAナビ</h1>
+    <span class="sub">首都高を降りずに、PAからPAへ。一般道を経由しないPAホッピング専用ツール。</span>
+  </header>
+
+  <div class="board">
+    <div class="field">
+      <label for="from">現在地のPA</label>
+      <select id="from"></select>
+      <div class="roadhint" id="fromHint"></div>
+    </div>
+    <div class="field">
+      <label for="to">目的のPA</label>
+      <select id="to"></select>
+      <div class="roadhint" id="toHint"></div>
+    </div>
+    <div class="rowctl">
+      <button id="swap" title="出発と目的を入れ替え" aria-label="出発と目的を入れ替え">⇅</button>
+      <button id="gps" title="現在地を表示" aria-label="現在地を表示" aria-pressed="false">◉</button>
+      <button id="go">ルート案内</button>
+    </div>
+  </div>
+
+  <div id="result" aria-live="polite"></div>
+
+  <p class="note">
+    距離は概算・所要時間は平均45km/h想定の目安。八重洲線(長期通行止め)・KK線(廃止)は経路に使いません。箱崎ロータリーと大黒PAは実際の構造どおり方向転換に使います。接続データは整備中のため、実走前に首都高公式サイトで乗り降りの向き・通行可否をご確認ください。
+  </p>
+
+  <div class="sister">
+    <a href="/chinso/300yen">▸ 首都高 格安周回ファインダー</a>
+    <a href="/chinso/">▸ 珍走ATLAS トップ</a>
+  </div>
+
+  <div class="disc">
+    本ツールは、首都高速道路株式会社が公開する公式料金表および公式ルート検索をもとに作成した非公式ツールです。最新の料金・通行止め・出入口の利用可否は、必ず首都高速道路 公式サイト(https://www.shutoko.jp/)でご確認ください。本サイトの情報の誤りによって生じた損害について、運営者は責任を負いかねます。
+  </div>
+
+  <footer class="foot">CHINSO ATLAS</footer>
+</div>
+
+<script>
+/* ===== グラフデータ v1 =====
+   ノード = (地点, 路線, 進行方向)。一方通行・JCT転回不可を構造で表現。 */
+const NODES = {
+  HWJ_u:{label:"平和島PA(上り)",pa:1,road:"1号羽田線 上り"},
+  HWJ_d:{label:"平和島PA(下り)",pa:1,road:"1号羽田線 下り"},
+  YOG:{label:"用賀PA",pa:1,road:"3号渋谷線 上り",originOnly:1,note:"東名側からのみ進入できます"},
+  EIF:{label:"永福PA",pa:1,road:"4号新宿線 上り",originOnly:1,note:"中央道・高井戸側からのみ進入できます"},
+  YYG:{label:"代々木PA",pa:1,road:"4号新宿線 上り"},
+  SMR:{label:"志村PA",pa:1,road:"5号池袋線 上り",originOnly:1,note:"戸田・美女木側からのみ進入できます"},
+  IKB:{label:"南池袋PA",pa:1,road:"5号池袋線 上り"},
+  HKZ:{label:"箱崎PA",pa:1,road:"箱崎ロータリー",turn:1},
+  KOM:{label:"駒形PA",pa:1,road:"6号向島線 上り"},
+  KAH:{label:"加平PA",pa:1,road:"6号三郷線 下り",destOnly:1,note:"この先は三郷方面(首都高の外)です"},
+  YAS:{label:"八潮PA",pa:1,road:"6号三郷線 上り",originOnly:1,note:"三郷側からのみ進入できます"},
+  TTM1:{label:"辰巳第一PA",pa:1,road:"9号深川線 上り",note:"進入は湾岸線東行きからのみ"},
+  TTM2:{label:"辰巳第二PA",pa:1,road:"9号深川線 上り",note:"進入は湾岸線西行きからのみ"},
+  SBR:{label:"芝浦PA",pa:1,road:"11号台場線 上り"},
+  ICH:{label:"市川PA",pa:1,road:"湾岸線 西行き",originOnly:1,note:"東関道側からのみ進入できます"},
+  OIE:{label:"大井PA(東行き)",pa:1,road:"湾岸線 東行き"},
+  OIW:{label:"大井PA(西行き)",pa:1,road:"湾岸線 西行き"},
+  DAI:{label:"大黒PA",pa:1,road:"大黒JCT",turn:1},
+  DSH:{label:"大師PA",pa:1,road:"K1横羽線 下り"},
+  KWG:{label:"川口PA",pa:1,road:"川口線 上り",originOnly:1,note:"東北道・川口JCT側からのみ進入できます"},
+
+  EDO_i:{label:"江戸橋JCT",road:"C1内回り"},EDO_o:{label:"江戸橋JCT",road:"C1外回り"},
+  TKB_i:{label:"竹橋JCT",road:"C1内回り"},TKB_o:{label:"竹橋JCT",road:"C1外回り"},
+  MYZ_i:{label:"三宅坂JCT",road:"C1内回り"},MYZ_o:{label:"三宅坂JCT",road:"C1外回り"},
+  TNM_i:{label:"谷町JCT",road:"C1内回り"},TNM_o:{label:"谷町JCT",road:"C1外回り"},
+  HMZ_i:{label:"浜崎橋JCT",road:"C1内回り"},HMZ_o:{label:"浜崎橋JCT",road:"C1外回り"},
+  OHS_3u:{label:"大橋JCT",road:"3号渋谷線 上り"},
+  OOI_i:{label:"大井JCT",road:"C2内回り"},
+  OHS_i:{label:"大橋JCT",road:"C2内回り"},OHS_o:{label:"大橋JCT",road:"C2外回り"},
+  NSJ_i:{label:"西新宿JCT",road:"C2内回り"},NSJ_o:{label:"西新宿JCT",road:"C2外回り"},
+  KMN_i:{label:"熊野町JCT",road:"C2内回り"},KMN_o:{label:"熊野町JCT",road:"C2外回り"},
+  ITB_i:{label:"板橋JCT",road:"C2内回り"},ITB_o:{label:"板橋JCT",road:"C2外回り"},
+  KOH_i:{label:"江北JCT",road:"C2内回り"},KOH_o:{label:"江北JCT",road:"C2外回り"},
+  KOS_i:{label:"小菅JCT",road:"C2内回り"},KOS_o:{label:"小菅JCT",road:"C2外回り"},
+  HOR_i:{label:"堀切JCT",road:"C2内回り"},HOR_o:{label:"堀切JCT",road:"C2外回り"},
+  KSI_o:{label:"葛西JCT",road:"C2外回り"},
+  KSI_be:{label:"葛西JCT",road:"湾岸線 東行き"},KSI_bw:{label:"葛西JCT",road:"湾岸線 西行き"},
+  UKI_e:{label:"川崎浮島JCT",road:"湾岸線 東行き"},UKI_w:{label:"川崎浮島JCT",road:"湾岸線 西行き"},
+  TOK_e:{label:"東海JCT",road:"湾岸線 東行き"},TOK_w:{label:"東海JCT",road:"湾岸線 西行き"},
+  OIJ_e:{label:"大井JCT",road:"湾岸線 東行き"},OIJ_w:{label:"大井JCT",road:"湾岸線 西行き"},
+  ARI_e:{label:"有明JCT",road:"湾岸線 東行き"},ARI_w:{label:"有明JCT",road:"湾岸線 西行き"},
+  TAT_e:{label:"辰巳JCT",road:"湾岸線 東行き"},TAT_w:{label:"辰巳JCT",road:"湾岸線 西行き"},
+  SWJ_u:{label:"昭和島JCT",road:"1号羽田線 上り"},SWJ_d:{label:"昭和島JCT",road:"1号羽田線 下り"},
+  DSJ_u:{label:"大師JCT",road:"K1横羽線 上り"},
+  NAM_d:{label:"生麦JCT付近",road:"K1横羽線 下り"},
+};
+
+const EDGES = {
+  EDO_i:[{to:"TKB_i",km:2.5},{to:"HKZ",km:1.6,via:["江戸橋JCT"]}],
+  TKB_i:[{to:"MYZ_i",km:1.7},{to:"ITB_o",km:8.4,via:["竹橋JCT","5号池袋線 下り","熊野町JCT"],mp:[[35.700,139.745],[35.726,139.720],[35.752,139.705]]},{to:"NSJ_i",km:11.8,via:["竹橋JCT","5号池袋線 下り","熊野町JCT"],mp:[[35.700,139.745],[35.726,139.720],[35.752,139.705]]}],
+  MYZ_i:[{to:"TNM_i",km:2.3},{to:"KMN_o",km:9.8,via:["三宅坂JCT","4号新宿線 下り","西新宿JCT"],mp:[[35.678,139.717],[35.683,139.703],[35.689,139.700],[35.694,139.692]]}],
+  TNM_i:[{to:"HMZ_i",km:3.0,mp:[[35.654,139.745]]},{to:"OOI_i",km:13.7,via:["谷町JCT","3号渋谷線 下り","大橋JCT"]},{to:"NSJ_o",km:8.6,via:["谷町JCT","3号渋谷線 下り","大橋JCT"]}],
+  HMZ_i:[{to:"EDO_i",km:4.0,mp:[[35.662,139.760],[35.675,139.770]]},{to:"HWJ_d",km:8.4,via:["浜崎橋JCT"],mp:[[35.641,139.745]]},{to:"TAT_e",km:7.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.638,139.757],[35.636,139.764],[35.636,139.790],[35.645,139.808]]},{to:"OIJ_w",km:10.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.638,139.757],[35.636,139.764],[35.636,139.790]]}],
+  EDO_o:[{to:"HMZ_o",km:4.0,mp:[[35.675,139.770],[35.662,139.760]]},{to:"HKZ",km:1.6,via:["江戸橋JCT"]}],
+  HMZ_o:[{to:"TNM_o",km:3.0,mp:[[35.654,139.745]]},{to:"HWJ_d",km:8.4,via:["浜崎橋JCT"],mp:[[35.641,139.745]]},{to:"TAT_e",km:7.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.638,139.757],[35.636,139.764],[35.636,139.790],[35.645,139.808]]},{to:"OIJ_w",km:10.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.638,139.757],[35.636,139.764],[35.636,139.790]]}],
+  TNM_o:[{to:"MYZ_o",km:2.3},{to:"OOI_i",km:13.7,via:["谷町JCT","3号渋谷線 下り","大橋JCT"]},{to:"NSJ_o",km:8.6,via:["谷町JCT","3号渋谷線 下り","大橋JCT"]}],
+  MYZ_o:[{to:"TKB_o",km:1.7},{to:"KMN_o",km:9.8,via:["三宅坂JCT","4号新宿線 下り","西新宿JCT"],mp:[[35.678,139.717],[35.683,139.703],[35.689,139.700],[35.694,139.692]]}],
+  TKB_o:[{to:"EDO_o",km:2.5},{to:"ITB_o",km:8.4,via:["竹橋JCT","5号池袋線 下り","熊野町JCT"],mp:[[35.700,139.745],[35.726,139.720],[35.752,139.705]]},{to:"NSJ_i",km:11.8,via:["竹橋JCT","5号池袋線 下り","熊野町JCT"],mp:[[35.700,139.745],[35.726,139.720],[35.752,139.705]]}],
+  YOG:[{to:"OHS_3u",km:5.5,mp:[[35.643,139.668]]}],
+  OHS_3u:[{to:"HMZ_i",km:6.9,via:["谷町JCT"],mp:[[35.665,139.740],[35.654,139.745]]},{to:"MYZ_o",km:6.2,via:["谷町JCT"]},{to:"OOI_i",km:9.8,via:["大橋JCT"]},{to:"NSJ_o",km:4.7,via:["大橋JCT"]}],
+  EIF:[{to:"YYG",km:5.5,via:["西新宿JCT(通過)"],mp:[[35.694,139.692],[35.689,139.700]]},{to:"KMN_o",km:8.4,via:["西新宿JCT"]}],
+  YYG:[{to:"TNM_i",km:6.2,via:["三宅坂JCT"],mp:[[35.678,139.717]]},{to:"TKB_o",km:5.6,via:["三宅坂JCT"],mp:[[35.678,139.717]]}],
+  IKB:[{to:"MYZ_i",km:7.6,via:["竹橋JCT"],mp:[[35.700,139.745]]},{to:"EDO_o",km:8.4,via:["竹橋JCT"],mp:[[35.700,139.745]]}],
+  SMR:[{to:"KOH_o",km:10.4,via:["板橋JCT"],mp:[[35.760,139.708]]},
+       {to:"IKB",km:5.9,via:["板橋JCT","熊野町JCT"],mp:[[35.760,139.708],[35.752,139.705]]},
+       {to:"NSJ_i",km:8.4,via:["板橋JCT","熊野町JCT"],mp:[[35.760,139.708],[35.752,139.705]]}],
+  HKZ:[{to:"TKB_i",km:4.1,via:["江戸橋JCT"]},{to:"HMZ_o",km:5.6,via:["江戸橋JCT"],mp:[[35.675,139.770],[35.662,139.760]]},{to:"KSI_be",km:11.9,via:["9号深川線 下り","辰巳JCT"],mp:[[35.663,139.800],[35.645,139.808]]},{to:"ARI_w",km:7.9,via:["9号深川線 下り","辰巳JCT"],mp:[[35.663,139.800],[35.645,139.808]]},{to:"KOS_i",km:6.9,via:["堀切JCT"],mp:[[35.695,139.793],[35.706,139.795],[35.745,139.826]]},{to:"KSI_o",km:16.3,via:["堀切JCT"],mp:[[35.695,139.793],[35.706,139.795],[35.745,139.826],[35.733,139.841],[35.698,139.861]]}],
+  KOM:[{to:"HKZ",km:3.2,via:["両国JCT(通過)"],mp:[[35.695,139.793]]}],
+  YAS:[{to:"KOH_i",km:12.9,via:["小菅JCT"],mp:[[35.776,139.817],[35.755,139.820]]},{to:"HOR_o",km:9.5,via:["小菅JCT"],mp:[[35.776,139.817],[35.755,139.820]]}],
+  KAH:[],
+  KWG:[{to:"ITB_i",km:15.4,via:["江北JCT"],mp:[[35.778,139.770]]},
+       {to:"KOS_o",km:12.9,via:["江北JCT"],mp:[[35.778,139.770]]}],
+  TTM1:[{to:"HKZ",km:4.8,via:["9号深川線 上り"],mp:[[35.645,139.808],[35.663,139.800]]}],
+  TTM2:[{to:"HKZ",km:4.8,via:["箱崎ロータリー"],mp:[[35.645,139.808],[35.663,139.800]]}],
+  SBR:[{to:"EDO_i",km:5.6,via:["浜崎橋JCT"],mp:[[35.650,139.755],[35.662,139.760],[35.675,139.770]]},{to:"TNM_o",km:4.6,via:["浜崎橋JCT"],mp:[[35.650,139.755],[35.654,139.745]]},{to:"HWJ_d",km:9.6,via:["浜崎橋JCT"],mp:[[35.650,139.755],[35.641,139.745]]}],
+  HWJ_u:[{to:"EDO_i",km:12.4,via:["浜崎橋JCT"],mp:[[35.641,139.745],[35.650,139.755],[35.662,139.760],[35.675,139.770]]},{to:"TNM_o",km:11.4,via:["浜崎橋JCT"],mp:[[35.641,139.745],[35.650,139.755],[35.654,139.745]]},{to:"TAT_e",km:15.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.641,139.745],[35.650,139.755],[35.638,139.757],[35.636,139.764],[35.636,139.790],[35.645,139.808]]},{to:"OIJ_w",km:18.8,via:["浜崎橋JCT","11号台場線 下り","有明JCT"],mp:[[35.641,139.745],[35.650,139.755],[35.638,139.757],[35.636,139.764],[35.636,139.790]]}],
+  HWJ_d:[{to:"SWJ_d",km:2.0}],
+  SWJ_d:[{to:"DSH",km:5.5,via:["羽田","大師本線料金所"],mp:[[35.549,139.745]]},{to:"OIE",km:4.9,via:["昭和島JCT","東海JCT"],mp:[[35.578,139.762],[35.585,139.760]]},{to:"UKI_w",km:9.4,via:["昭和島JCT","東海JCT"],mp:[[35.578,139.762],[35.553,139.787]]}],
+  SWJ_u:[{to:"HWJ_u",km:2.0},{to:"OIE",km:4.9,via:["昭和島JCT","東海JCT"],mp:[[35.578,139.762],[35.585,139.760]]},{to:"UKI_w",km:9.4,via:["昭和島JCT","東海JCT"],mp:[[35.578,139.762],[35.553,139.787]]}],
+  DSH:[{to:"NAM_d",km:6.5}],
+  NAM_d:[{to:"DAI",km:2.4,via:["生麦JCT","K5大黒線"]}],
+  DSJ_u:[{to:"SWJ_u",km:5.0,via:["羽田"],mp:[[35.549,139.745]]},{to:"TOK_e",km:13.4,via:["大師JCT","K6川崎線","川崎浮島JCT"],mp:[[35.512,139.787],[35.553,139.787]]},{to:"DAI",km:16.4,via:["大師JCT","K6川崎線","川崎浮島JCT"],mp:[[35.512,139.787]]}],
+  DAI:[{to:"UKI_e",km:10.0},{to:"DSJ_u",km:9.4,via:["K5大黒線","生麦JCT"]}],
+  UKI_e:[{to:"TOK_e",km:7.0,via:["空港中央"]},{to:"NAM_d",km:12.9,via:["川崎浮島JCT","K6川崎線","大師JCT"],mp:[[35.512,139.787],[35.535,139.723],[35.532,139.720]]}],
+  TOK_e:[{to:"OIE",km:2.5},{to:"HWJ_u",km:4.4,via:["東海JCT","昭和島JCT"]},{to:"DSH",km:7.9,via:["東海JCT","昭和島JCT","羽田"],mp:[[35.549,139.745]]}],
+  OIE:[{to:"OIJ_e",km:0.5}],
+  OIJ_e:[{to:"ARI_e",km:5.0},{to:"OHS_o",km:9.8,via:["大井JCT","C2山手トンネル"]}],
+  ARI_e:[{to:"TAT_e",km:2.0,via:["東雲JCT(通過)"]},{to:"SBR",km:3.9,via:["有明JCT","レインボーブリッジ"],mp:[[35.636,139.790],[35.636,139.764]]}],
+  TAT_e:[{to:"KSI_be",km:6.0},{to:"TTM1",km:1.1,via:["辰巳JCT"]}],
+  KSI_be:[{to:"HOR_i",km:10.9,via:["葛西JCT"],mp:[[35.698,139.861],[35.733,139.841]]}],
+  ICH:[{to:"KSI_bw",km:8.0}],
+  KSI_bw:[{to:"TAT_w",km:6.0},{to:"HOR_i",km:10.9,via:["葛西JCT"],mp:[[35.698,139.861],[35.733,139.841]]}],
+  TAT_w:[{to:"ARI_w",km:2.0},{to:"TTM2",km:1.1,via:["辰巳JCT"]}],
+  ARI_w:[{to:"OIJ_w",km:5.0},{to:"SBR",km:3.9,via:["有明JCT","レインボーブリッジ"],mp:[[35.636,139.790],[35.636,139.764]]}],
+  OIJ_w:[{to:"OIW",km:0.5},{to:"OHS_o",km:9.8,via:["大井JCT","C2山手トンネル"]}],
+  OIW:[{to:"TOK_w",km:2.5}],
+  TOK_w:[{to:"UKI_w",km:7.0,via:["空港中央"]},{to:"DSH",km:7.9,via:["東海JCT","昭和島JCT","羽田"],mp:[[35.549,139.745]]}],
+  UKI_w:[{to:"DAI",km:10.0},{to:"NAM_d",km:12.9,via:["川崎浮島JCT","K6川崎線","大師JCT"],mp:[[35.512,139.787],[35.535,139.723],[35.532,139.720]]}],
+  HOR_i:[{to:"KOS_i",km:1.1},{to:"KOM",km:4.0,via:["堀切JCT","6号向島線 上り"]}],
+  KOS_i:[{to:"KOH_i",km:4.5},{to:"KAH",km:3.4,via:["小菅JCT","6号三郷線 下り"]}],
+  KOH_i:[{to:"ITB_i",km:7.0}],
+  ITB_i:[{to:"KMN_i",km:1.0}],
+  KMN_i:[{to:"NSJ_i",km:4.0},{to:"IKB",km:1.9,via:["熊野町JCT","5号池袋線 上り"]}],
+  NSJ_i:[{to:"OHS_i",km:4.3},{to:"YYG",km:1.9,via:["西新宿JCT","4号新宿線 上り"],mp:[[35.689,139.700]]}],
+  OHS_i:[{to:"OOI_i",km:9.4},{to:"HMZ_i",km:7.3,via:["大橋JCT","3号渋谷線 上り","谷町JCT"],mp:[[35.665,139.740],[35.654,139.745]]},{to:"MYZ_o",km:6.6,via:["大橋JCT","3号渋谷線 上り","谷町JCT"]}],
+  OOI_i:[{to:"ARI_e",km:5.4,via:["大井JCT"]},{to:"OIW",km:0.9,via:["大井JCT"]}],
+  OHS_o:[{to:"NSJ_o",km:4.3},{to:"HMZ_i",km:7.3,via:["大橋JCT","3号渋谷線 上り","谷町JCT"],mp:[[35.665,139.740],[35.654,139.745]]},{to:"MYZ_o",km:6.6,via:["大橋JCT","3号渋谷線 上り","谷町JCT"]}],
+  NSJ_o:[{to:"KMN_o",km:4.0}],
+  KMN_o:[{to:"ITB_o",km:1.0},{to:"IKB",km:1.9,via:["熊野町JCT","5号池袋線 上り"]}],
+  ITB_o:[{to:"KOH_o",km:7.0}],
+  KOH_o:[{to:"KOS_o",km:4.5}],
+  KOS_o:[{to:"HOR_o",km:1.1},{to:"KAH",km:3.4,via:["小菅JCT","6号三郷線 下り"]}],
+  HOR_o:[{to:"KSI_o",km:10.5,via:["四つ木","小松川"]},{to:"KOM",km:4.0,via:["堀切JCT","6号向島線 上り"]}],
+  KSI_o:[{to:"TAT_w",km:6.4,via:["葛西JCT"]}],
+};
+
+/* 乗換ペナルティ付きDijkstra(表示距離は実km) */
+function findRoute(start, goal){
+  const dist={}, real={}, prev={};
+  const pq=[[0,start]]; dist[start]=0; real[start]=0;
+  while(pq.length){
+    pq.sort((a,b)=>a[0]-b[0]);
+    const [d,u]=pq.shift();
+    if(d>(dist[u]??Infinity)) continue;
+    for(const e of (EDGES[u]||[])){
+      const nd=d+e.km+(e.via?0.6:0);
+      if(nd<(dist[e.to]??Infinity)){
+        dist[e.to]=nd; real[e.to]=real[u]+e.km; prev[e.to]={from:u,edge:e};
+        pq.push([nd,e.to]);
+      }
+    }
+  }
+  if(dist[goal]===undefined) return null;
+  const steps=[]; let cur=goal;
+  while(cur!==start){const p=prev[cur];steps.unshift({to:cur,km:p.edge.km,via:p.edge.via||[],mp:p.edge.mp});cur=p.from;}
+  return {km:real[goal], steps};
+}
+
+/* ===== マップ(路線概略図) ===== */
+const COORDS = {
+  HWJ_u:[35.5865,139.7385],HWJ_d:[35.5795,139.7405],YOG:[35.626,139.633],EIF:[35.678,139.642],
+  YYG:[35.683,139.703],SMR:[35.787,139.682],IKB:[35.726,139.720],HKZ:[35.679,139.786],
+  KOM:[35.706,139.795],KAH:[35.776,139.817],YAS:[35.812,139.843],TTM1:[35.6425,139.8035],
+  TTM2:[35.648,139.8125],SBR:[35.638,139.757],ICH:[35.678,139.925],OIE:[35.5815,139.7615],
+  OIW:[35.5860,139.7572],DAI:[35.459,139.686],DSH:[35.532,139.720],KWG:[35.836,139.745],
+  EDO_i:[35.682,139.774],EDO_o:[35.682,139.774],TKB_i:[35.690,139.757],TKB_o:[35.690,139.757],
+  MYZ_i:[35.678,139.741],MYZ_o:[35.678,139.741],TNM_i:[35.665,139.740],TNM_o:[35.665,139.740],
+  HMZ_i:[35.650,139.755],HMZ_o:[35.650,139.755],OHS_3u:[35.650,139.686],
+  OOI_i:[35.585,139.757],OHS_i:[35.650,139.686],OHS_o:[35.650,139.686],
+  NSJ_i:[35.694,139.692],NSJ_o:[35.694,139.692],KMN_i:[35.752,139.705],KMN_o:[35.752,139.705],
+  ITB_i:[35.760,139.708],ITB_o:[35.760,139.708],KOH_i:[35.778,139.770],KOH_o:[35.778,139.770],
+  KOS_i:[35.755,139.820],KOS_o:[35.755,139.820],HOR_i:[35.745,139.826],HOR_o:[35.745,139.826],
+  KSI_o:[35.656,139.860],KSI_be:[35.656,139.860],KSI_bw:[35.656,139.860],
+  UKI_e:[35.512,139.787],UKI_w:[35.512,139.787],TOK_e:[35.578,139.762],TOK_w:[35.578,139.762],
+  OIJ_e:[35.585,139.757],OIJ_w:[35.585,139.757],ARI_e:[35.636,139.790],ARI_w:[35.636,139.790],
+  TAT_e:[35.645,139.808],TAT_w:[35.645,139.808],SWJ_u:[35.576,139.747],SWJ_d:[35.576,139.747],
+  DSJ_u:[35.535,139.723],NAM_d:[35.496,139.667],
+};
+const VIA_COORDS = {
+  "江戸橋JCT":[35.682,139.774],"竹橋JCT":[35.690,139.757],"三宅坂JCT":[35.678,139.741],
+  "谷町JCT":[35.665,139.740],"浜崎橋JCT":[35.650,139.755],"大橋JCT":[35.650,139.686],
+  "西新宿JCT":[35.694,139.692],"西新宿JCT(通過)":[35.694,139.692],"熊野町JCT":[35.752,139.705],
+  "板橋JCT":[35.760,139.708],"江北JCT":[35.778,139.770],"小菅JCT":[35.755,139.820],
+  "堀切JCT":[35.745,139.826],"葛西JCT":[35.656,139.860],"大井JCT":[35.585,139.757],
+  "有明JCT":[35.636,139.790],"辰巳JCT":[35.645,139.808],"昭和島JCT":[35.576,139.747],
+  "東海JCT":[35.578,139.762],"大師JCT":[35.535,139.723],"生麦JCT":[35.496,139.667],
+  "川崎浮島JCT":[35.512,139.787],"両国JCT(通過)":[35.695,139.793],"羽田":[35.549,139.745],
+  "空港中央":[35.553,139.787],"東雲JCT(通過)":[35.640,139.798],"四つ木":[35.733,139.841],
+  "小松川":[35.698,139.861],"レインボーブリッジ":[35.636,139.764],
+  "大師本線料金所":[35.538,139.722],"箱崎ロータリー":[35.679,139.786],
+};
+const BASENET = [
+  // C1
+  [[35.682,139.774],[35.690,139.757],[35.678,139.741],[35.665,139.740],[35.654,139.745],[35.650,139.755],[35.662,139.760],[35.675,139.770],[35.682,139.774]],
+  // 1号羽田線/K1横羽線
+  [[35.650,139.755],[35.641,139.745],[35.583,139.738],[35.576,139.747],[35.549,139.745],[35.535,139.723],[35.532,139.720],[35.496,139.667]],
+  // K5大黒線
+  [[35.496,139.667],[35.459,139.686]],
+  // K6川崎線
+  [[35.535,139.723],[35.512,139.787]],
+  // 湾岸線
+  [[35.459,139.686],[35.512,139.787],[35.553,139.787],[35.578,139.762],[35.585,139.760],[35.585,139.757],[35.636,139.790],[35.640,139.798],[35.645,139.808],[35.656,139.860],[35.678,139.925]],
+  // 東海⇔昭和島連絡路
+  [[35.578,139.762],[35.576,139.747]],
+  // 11号台場線
+  [[35.650,139.755],[35.638,139.757],[35.636,139.764],[35.636,139.790]],
+  // 9号深川線
+  [[35.679,139.786],[35.663,139.800],[35.645,139.808]],
+  // 6号向島線
+  [[35.682,139.774],[35.679,139.786],[35.695,139.793],[35.706,139.795],[35.745,139.826]],
+  // 6号三郷線
+  [[35.755,139.820],[35.776,139.817],[35.812,139.843]],
+  // C2
+  [[35.585,139.757],[35.650,139.686],[35.694,139.692],[35.752,139.705],[35.760,139.708],[35.778,139.770],[35.755,139.820],[35.745,139.826],[35.733,139.841],[35.698,139.861],[35.656,139.860]],
+  // 3号渋谷線
+  [[35.665,139.740],[35.650,139.686],[35.643,139.668],[35.626,139.633]],
+  // 4号新宿線
+  [[35.678,139.741],[35.678,139.717],[35.683,139.703],[35.689,139.700],[35.694,139.692],[35.678,139.642]],
+  // 5号池袋線
+  [[35.690,139.757],[35.700,139.745],[35.726,139.720],[35.752,139.705]],
+  [[35.760,139.708],[35.787,139.682]],
+  // 川口線
+  [[35.778,139.770],[35.836,139.745]],
+];
+const MAPP = { latMax:35.85, lngMin:139.615, cosf:0.813, S:2100 };
+function prj([lat,lng]){
+  return [ (lng-MAPP.lngMin)*MAPP.cosf*MAPP.S, (MAPP.latMax-lat)*MAPP.S ];
+}
+function poly(pts){ return pts.map(p=>prj(p).map(v=>v.toFixed(1)).join(",")).join(" "); }
+
+let _SEGS=null;
+function _netSegs(){
+  if(_SEGS) return _SEGS;
+  _SEGS=[];
+  for(const line of BASENET){
+    const ps=line.map(prj);
+    for(let i=0;i<ps.length-1;i++) _SEGS.push([ps[i],ps[i+1]]);
+  }
+  return _SEGS;
+}
+function snapXY(p){
+  let best=p, bd=Infinity;
+  for(const [a,b] of _netSegs()){
+    const dx=b[0]-a[0], dy=b[1]-a[1];
+    const L2=dx*dx+dy*dy; if(L2===0) continue;
+    let t=((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L2;
+    t=Math.max(0,Math.min(1,t));
+    const q=[a[0]+t*dx, a[1]+t*dy];
+    const d=(p[0]-q[0])**2+(p[1]-q[1])**2;
+    if(d<bd){bd=d;best=q;}
+  }
+  return best;
+}
+function renderMap(routePts, paOnRoute, startId, goalId, jctMarks){
+  const FW=605, FH=830;
+  let x0=0, y0=0, vw=FW, vh=FH;
+  if(routePts && routePts.length>1){
+    const ps=routePts.map(prj);
+    let mnx=Math.min(...ps.map(p=>p[0])), mxx=Math.max(...ps.map(p=>p[0]));
+    let mny=Math.min(...ps.map(p=>p[1])), mxy=Math.max(...ps.map(p=>p[1]));
+    const padx=Math.max((mxx-mnx)*0.18, 55), pady=Math.max((mxy-mny)*0.14, 55);
+    x0=Math.max(0,mnx-padx); y0=Math.max(0,mny-pady);
+    vw=Math.min(FW,mxx+padx)-x0; vh=Math.min(FH,mxy+pady)-y0;
+  }
+  const sc=Math.max(vw/FW, vh/FH);
+  const z=Math.max(sc, 0.34);
+  window.__vb={x0,y0,vw,vh,z};
+  const fs=(b)=>(b*z).toFixed(2);
+  let s2=`<div class="mapbox"><svg viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} ${vw.toFixed(0)} ${vh.toFixed(0)}" role="img" aria-label="ルートマップ">`;
+  s2+=`<rect x="${x0}" y="${y0}" width="${vw}" height="${vh}" fill="#f7f5ef"/>`;
+  // 路線網: 道路リボン(ケーシング+白)
+  for(const line of BASENET) s2+=`<polyline class="net-casing" style="stroke-width:${fs(5.6)}" points="${poly(line)}"/>`;
+  for(const line of BASENET) s2+=`<polyline class="net" style="stroke-width:${fs(3.4)}" points="${poly(line)}"/>`;
+  // ルート: 白縁+Appleブルー+流れ
+  if(routePts && routePts.length>1){
+    s2+=`<polyline class="route-casing" style="stroke-width:${fs(8.2)}" points="${poly(routePts)}"/>`;
+    s2+=`<polyline class="routeline" style="stroke-width:${fs(5.4)}" points="${poly(routePts)}"/>`;
+    s2+=`<polyline class="routeflow" style="stroke-width:${fs(1.7)};stroke-dasharray:${fs(2.6)} ${fs(11.4)}" points="${poly(routePts)}"/>`;
+  }
+  // ルート上のJCTひし形+ラベル
+  for(const j of (jctMarks||[])){
+    const [x,y]=prj(j.pt);
+    s2+=`<rect class="jctmark" x="${(x-3.4*z).toFixed(1)}" y="${(y-3.4*z).toFixed(1)}" width="${fs(6.8)}" height="${fs(6.8)}" style="stroke-width:${fs(1.4)}" transform="rotate(45 ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    s2+=lbl(j.name, x, y, "maplbl dim", 10.5*z, x0, vw, 9*z);
+  }
+  // PAドット
+  for(const id of Object.keys(NODES)){
+    if(!NODES[id].pa || !COORDS[id]) continue;
+    const [x,y]=snapXY(prj(COORDS[id]));
+    if(x<x0-10||x>x0+vw+10||y<y0-10||y>y0+vh+10) continue;
+    const ep=(id===startId||id===goalId), on=paOnRoute.has(id);
+    const cls = id===startId?"padot start":(id===goalId?"padot goal":(on?"padot onroute":"padot"));
+    s2+=`<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${fs(ep?7:(on?5.5:4))}" style="stroke-width:${fs(ep?2.6:(on?2.2:1.4))}"/>`;
+    if(id===startId) s2+=lbl(NODES[id].label, x, y, "maplbl onpill", 12*z, x0, vw, 11*z, "#0a84ff");
+    else if(id===goalId) s2+=lbl(NODES[id].label, x, y, "maplbl onpill", 12*z, x0, vw, 11*z, "#ff3b30");
+    else if(on) s2+=lbl(NODES[id].label, x, y, "maplbl strong", 11.5*z, x0, vw, 10*z, "#ffffff");
+    else if(sc>0.85) s2+=lbl(NODES[id].label, x, y, "maplbl dim", 9.5*z, x0, vw, 7*z);
+  }
+  s2+=`<g id="gpsg"></g></svg>`;
+  if(routePts && routePts.length>1){
+    s2+=`<div class="maplegend">
+      <span><i class="lg start"></i>出発</span>
+      <span><i class="lg goal"></i>目的</span>
+      <span><i class="lg pass"></i>通過PA</span>
+      <span><i class="lg jct"></i>JCT</span>
+      <span><i class="lg route"></i>ルート</span>
+    </div>`;
+  }
+  s2+=`</div>`;
+  return s2;
+}
+function lbl(text, x, y, cls, size, x0, vw, off, pill){
+  const right = x > x0 + vw*0.72;   // 右端寄りは左側にラベル
+  const tx=right?(x-off):(x+off), anchor=right?"end":"start";
+  const ty=(y+size*0.36).toFixed(1);
+  let bg="";
+  if(pill){
+    const w=text.length*size*1.02 + size*0.9, h=size*1.5;
+    const bx=right?(tx-w+size*0.45):(tx-size*0.45);
+    bg=`<rect x="${bx.toFixed(1)}" y="${(y-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${(h/2).toFixed(1)}" fill="${pill}" stroke="rgba(0,0,0,.10)" stroke-width="0.6"/>`;
+  }
+  return bg+`<text class="${cls}" style="font-size:${size.toFixed(2)}px" x="${tx.toFixed(1)}" y="${ty}" text-anchor="${anchor}">${esc(text)}</text>`;
+}
+
+/* ===== UI ===== */
+const $=id=>document.getElementById(id);
+const PA_IDS=Object.keys(NODES).filter(k=>NODES[k].pa);
+const fromSel=$("from"), toSel=$("to");
+
+function fillSelects(){
+  for(const id of PA_IDS){
+    const n=NODES[id];
+    if(!n.destOnly){const o=document.createElement("option");o.value=id;o.textContent=n.label;fromSel.appendChild(o);}
+  }
+  for(const id of PA_IDS){
+    const n=NODES[id];
+    if(!n.originOnly){const o=document.createElement("option");o.value=id;o.textContent=n.label;toSel.appendChild(o);}
+  }
+  fromSel.value="DAI"; toSel.value="TTM1";
+  updateHints();
+}
+function updateHints(){
+  const f=NODES[fromSel.value], t=NODES[toSel.value];
+  $("fromHint").textContent=f?f.road+(f.note?" ・ "+f.note:""):"";
+  $("toHint").textContent=t?t.road+(t.note?" ・ "+t.note:""):"";
+}
+fromSel.addEventListener("change",updateHints);
+toSel.addEventListener("change",updateHints);
+
+$("swap").addEventListener("click",()=>{
+  const f=fromSel.value, t=toSel.value;
+  // 入替先に存在しない場合(origin/destOnly)は無視せず可能なものだけ
+  if([...fromSel.options].some(o=>o.value===t)) fromSel.value=t;
+  if([...toSel.options].some(o=>o.value===f)) toSel.value=f;
+  updateHints();
+});
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+$("go").addEventListener("click",()=>{
+  const s=fromSel.value, g=toSel.value, R=$("result");
+  if(s===g){R.innerHTML='<div class="warnsign"><div class="t">出発と目的が同じです</div><div class="b">別のPAを選んでください。</div></div>';return;}
+  const r=findRoute(s,g);
+  if(!r){
+    const n=NODES[s];
+    R.innerHTML=`<div class="warnsign"><div class="t">⚠ 首都高内では到達できません</div>
+      <div class="b">${esc(NODES[s].label)} から ${esc(NODES[g].label)} へは、首都高を降りずに行くルートがありません。${n.note?("<br>"+esc(n.note)):""}</div></div>`;
+    return;
+  }
+  const min=Math.round(r.km*60/45);
+  // 表示シーケンス構築(連続重複は除去) + マップ用座標列・通過PA集合
+  const seq=[{name:NODES[s].label, road:NODES[s].road, type:"pa"}];
+  const routePts=[COORDS[s]];
+  const paOnRoute=new Set([s]);
+  const pushPt=(p)=>{ if(p && (routePts.length===0 || routePts[routePts.length-1][0]!==p[0] || routePts[routePts.length-1][1]!==p[1])) routePts.push(p); };
+  const ARR9U=["TTM1","TTM2"], ARR6U=["KOM"], ARR6D=["EDO_i","EDO_o"];
+  const DEP9D=["KSI_be","ARI_w"], DEP6U=["TKB_i","HMZ_o"], DEP6D=["KOS_i","KSI_o"];
+  r.steps.forEach((st,i)=>{
+    for(const v of st.via){
+      if(seq[seq.length-1].name!==v) seq.push({name:v, type:"via"});
+      if(!st.mp) pushPt(VIA_COORDS[v]);
+    }
+    if(st.mp) for(const p of st.mp) pushPt(p);
+    const n=NODES[st.to];
+    let disp={name:n.label, road:n.road, type:n.pa?"pa":"jct", turn:n.turn, km:st.km};
+    // 箱崎の中間通過: ロータリーで実際に転回する時だけPA+転回、それ以外はJCT分岐として表示
+    if(st.to==="HKZ" && i<r.steps.length-1){
+      const prev=i===0?s:r.steps[i-1].to, next=r.steps[i+1].to;
+      const uturn=(ARR9U.includes(prev)&&DEP9D.includes(next))
+               || (ARR6U.includes(prev)&&DEP6D.includes(next))
+               || (ARR6D.includes(prev)&&DEP6U.includes(next));
+      if(!uturn) disp={name:"箱崎JCT", road:"6号向島線・9号深川線 分岐", type:"jct", km:st.km};
+    }
+    if(disp.type==="pa") paOnRoute.add(st.to);
+    // 道路沿いPAの通過時は線を立ち寄らせない(線は道なり、PAは脇のドット)
+    const HUB=["HKZ","DAI"];
+    const isLast=(i===r.steps.length-1);
+    if(!NODES[st.to].pa || isLast || HUB.includes(st.to)) pushPt(COORDS[st.to]);
+    if(seq[seq.length-1].name===disp.name){ disp.km=st.km; seq[seq.length-1]=disp; }
+    else seq.push(disp);
+  });
+  // ルート上のJCTマーク(viaのJCT + JCT型パネル)を収集
+  const jctMarks=[], seenJ=new Set();
+  const addJ=(name,pt)=>{ const k=name.replace("(通過)",""); if(pt&&!seenJ.has(k)){seenJ.add(k);jctMarks.push({name:k,pt});} };
+  for(const st of r.steps) for(const v of st.via) if(/JCT/.test(v)) addJ(v, VIA_COORDS[v]);
+  for(const p of seq) if(p.type==="jct"&&/JCT/.test(p.name)) addJ(p.name, VIA_COORDS[p.name]);
+  let html=`<div class="totalbar"><span class="lbl">ルート</span>
+    <span class="nums">${r.km.toFixed(1)}<small>km</small>&nbsp;&nbsp;約${min}<small>分</small></span></div>`;
+  html+=renderMap(routePts, paOnRoute, s, g, jctMarks);
+  html+=`<div class="route">`;
+  seq.forEach((p,i)=>{
+    const cls=p.type==="pa"?"step pa":(p.type==="via"?"step via":"step");
+    let turn=p.turn&&i>0&&i<seq.length-1?'<span class="badge-turn">転回</span>':"";
+    if(p.type==="pa"&&i>0&&i<seq.length-1&&!p.turn) turn='<span class="badge-pass">通過</span>';
+    const km=p.km!==undefined&&i>0?`<span class="km">+${p.km.toFixed(1)}km</span>`:"";
+    html+=`<div class="${cls}" style="animation-delay:${Math.min(i*45,500)}ms">
+      <div class="name">${esc(p.name)}${turn}</div>
+      ${p.road?`<div class="road">${esc(p.road)}</div>`:""}${km}</div>`;
+  });
+  html+="</div>";
+  const goalN=NODES[g];
+  if(goalN.note) html+=`<div class="warnsign" style="margin-top:6px"><div class="t">到着後の注意</div><div class="b">${esc(goalN.note)}</div></div>`;
+  R.innerHTML=html;
+  drawGps();
+});
+
+/* ===== GPS現在地 ===== */
+let gpsWatch=null, gpsPos=null;
+function drawGps(){
+  const g=document.getElementById("gpsg");
+  if(!g) return;
+  if(!gpsPos){ g.innerHTML=""; return; }
+  let [x,y]=prj(gpsPos);
+  const vb=window.__vb||{x0:0,y0:0,vw:605,vh:830,z:1};
+  const inB = x>=vb.x0-10 && x<=vb.x0+vb.vw+10 && y>=vb.y0-10 && y<=vb.y0+vb.vh+10;
+  const m=14*vb.z;
+  const cx=Math.min(Math.max(x,vb.x0+m),vb.x0+vb.vw-m).toFixed(1);
+  const cy=Math.min(Math.max(y,vb.y0+m),vb.y0+vb.vh-m).toFixed(1);
+  g.innerHTML=`<circle class="gpspulse" cx="${cx}" cy="${cy}" r="${(9*vb.z).toFixed(1)}" style="stroke-width:${(2*vb.z).toFixed(1)}"/>`+
+    `<circle class="gpsdot" cx="${cx}" cy="${cy}" r="${(6*vb.z).toFixed(1)}" style="stroke-width:${(2*vb.z).toFixed(1)}" opacity="${inB?1:0.45}"/>`+
+    (inB?"":`<text class="maplbl" style="font-size:${(11*vb.z).toFixed(1)}px" x="${cx}" y="${(+cy-14*vb.z).toFixed(1)}" text-anchor="middle">マップ範囲外</text>`);
+}
+$("gps").addEventListener("click",()=>{
+  if(gpsWatch!==null){
+    navigator.geolocation.clearWatch(gpsWatch);
+    gpsWatch=null; gpsPos=null;
+    $("gps").classList.remove("on"); $("gps").setAttribute("aria-pressed","false");
+    drawGps(); return;
+  }
+  if(!navigator.geolocation){ alert("この端末では位置情報が使えません"); return; }
+  $("gps").classList.add("on"); $("gps").setAttribute("aria-pressed","true");
+  gpsWatch=navigator.geolocation.watchPosition(p=>{
+    gpsPos=[p.coords.latitude,p.coords.longitude];
+    if(!document.getElementById("gpsg")) $("result").innerHTML=renderMap(null,new Set(),null,null);
+    drawGps();
+  }, e=>{
+    alert("位置情報を取得できません。\nブラウザの許可設定と、HTTPSでの表示(またはホーム画面追加)が必要な場合があります。\n("+e.message+")");
+    $("gps").classList.remove("on"); $("gps").setAttribute("aria-pressed","false");
+    gpsWatch=null;
+  }, {enableHighAccuracy:true, maximumAge:3000, timeout:15000});
+});
+
+fillSelects();
+</script>
+</body>
+</html>
