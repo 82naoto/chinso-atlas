@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>お問い合わせ｜珍走ATLAS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+:root{--ink:#14181f;--paper:#f4f1ea;--line:#2a3340;--hot:#ff5430;--cool:#1f6feb;--gold:#e8b13c;--muted:#7b8494;--ok:#34c759;--card:#1b212b;--ring:#9b6dff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--ink);color:var(--paper);min-height:100vh;line-height:1.7;
+ background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.025) 39px,rgba(255,255,255,.025) 40px);}
+.wrap{max-width:780px;margin:0 auto;padding:24px 16px 90px;}
+
+header{border-bottom:3px solid var(--hot);padding-bottom:14px;margin-bottom:22px;}
+.kicker{font-family:'Bebas Neue';letter-spacing:.22em;color:var(--hot);font-size:.95rem;}
+h1{font-weight:900;font-size:1.7rem;letter-spacing:.02em;line-height:1.18;margin-top:4px;}
+.sub{margin-top:6px;font-size:.8rem;color:var(--muted);}
+.back{display:inline-block;margin-bottom:14px;font-family:'Bebas Neue';letter-spacing:.14em;font-size:.85rem;color:var(--cool);text-decoration:none;}
+.back:hover{color:var(--hot);}
+
+.sec-h{font-family:'Bebas Neue';letter-spacing:.14em;font-size:1.15rem;color:var(--paper);margin:28px 2px 12px;display:flex;align-items:center;gap:10px;}
+.sec-h::before{content:"";width:12px;height:12px;background:var(--hot);border-radius:2px;transform:rotate(45deg);flex-shrink:0;}
+
+p{font-size:.92rem;margin-bottom:12px;}
+.note{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:.84rem;color:var(--paper);opacity:.9;line-height:1.8;margin-top:6px;margin-bottom:18px;}
+.note b{color:var(--gold);font-weight:700;}
+
+form{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:20px 18px;margin-bottom:18px;}
+.field{margin-bottom:16px;}
+.field:last-of-type{margin-bottom:20px;}
+label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:6px;}
+label .req{color:var(--hot);margin-left:4px;font-size:.7rem;}
+input[type=text], input[type=email], textarea, select{
+  width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;
+  color:var(--paper);font-family:inherit;font-size:.95rem;padding:10px 12px;
+  transition:border-color .15s;
+}
+input:focus, textarea:focus, select:focus{outline:none;border-color:var(--hot);}
+textarea{resize:vertical;min-height:140px;line-height:1.6;}
+
+button[type=submit]{
+  width:100%;background:var(--hot);color:#fff;border:none;border-radius:8px;
+  font-family:'Bebas Neue';letter-spacing:.18em;font-size:1.05rem;
+  padding:13px 0;cursor:pointer;transition:opacity .15s;
+}
+button[type=submit]:hover{opacity:.88;}
+button[type=submit]:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+
+.msg{padding:14px 16px;border-radius:10px;font-size:.9rem;margin-top:14px;display:none;}
+.msg.ok{background:rgba(52,199,89,.12);border:1px solid var(--ok);color:var(--ok);}
+.msg.ng{background:rgba(255,84,48,.12);border:1px solid var(--hot);color:var(--hot);}
+.msg.show{display:block;}
+
+ul.faq{list-style:none;padding:0;}
+ul.faq li{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:8px;font-size:.88rem;}
+ul.faq li b{display:block;color:var(--gold);font-weight:700;margin-bottom:3px;font-size:.83rem;letter-spacing:.02em;}
+
+footer{margin-top:34px;text-align:center;font-family:'Bebas Neue';letter-spacing:.16em;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:20px;}
+footer a{color:var(--muted);text-decoration:none;margin:0 8px;}
+footer a:hover{color:var(--hot);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/index.html">← TOP</a>
+  <header>
+    <div class="kicker">CONTACT — お問い合わせ</div>
+    <h1>お問い合わせ</h1>
+    <div class="sub">ご意見・修正提案・削除依頼などを承ります</div>
+  </header>
+
+  <p>当サイトについてのご意見、誤りのご指摘、機能のご要望、削除依頼などは<dd>https://x.com/chinso_atlas</dd>にお寄せください。<br>個人運営のため、返信までお時間をいただく場合があります。</p>
+
+  <div class="note">
+    <b>※ 個別の道路状況・走行ルートの相談には対応しておりません。</b><br>
+    実際の走行・運転にあたっては、必ず公式情報および現地の標識をご確認のうえ、ご自身の判断でお願いいたします。
+  </div>
+
+  <div class="sec-h">よくあるご質問</div>
+  <ul class="faq">
+    <li><b>返信はいつ来ますか?</b>個人運営のため、返信まで数日〜数週間かかる場合があります。<br>すべてのお問い合わせに必ず返信できるとは限りません。</li>
+    <li><b>料金や経路は正確ですか?</b>可能な限り正確を期していますが、実際の料金・経路は公式情報をご確認ください。<br>誤りに気づかれた場合は本フォームよりご一報いただけると助かります。</li>
+  </ul>
+
+  <footer>
+    <div style="margin-bottom:8px;">
+      <a href="/about">運営者情報</a>・
+      <a href="/privacy">プライバシーポリシー</a>・
+      <a href="/contact">お問い合わせ</a>
+    </div>
+    © 2026 CHINSO ATLAS
+  </footer>
+</div>
+
+<script>
+// TODO: Firestoreへの送信処理(運営者がFirebase設定を入れて差し替え)
+// 現状はダミー: 送信ボタン押下で成功メッセージを表示
+document.getElementById('contactForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  const msg=document.getElementById('msg');
+  btn.disabled=true; btn.textContent='送信中...';
+  msg.className='msg';
+  try{
+    // ▼ ここでFirestore送信(運営者が実装):
+    // import { initializeApp } from "firebase/app";
+    // import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+    // await addDoc(collection(db,"contacts"), {
+    //   category: document.getElementById('category').value,
+    //   name:     document.getElementById('name').value,
+    //   email:    document.getElementById('email').value,
+    //   message:  document.getElementById('message').value,
+    //   createdAt: serverTimestamp(),
+    //   userAgent: navigator.userAgent
+    // });
+    await new Promise(r=>setTimeout(r,600)); // ダミー遅延
+    msg.classList.add('ok','show');
+    msg.textContent='送信が完了しました。お問い合わせありがとうございます。';
+    document.getElementById('contactForm').reset();
+    btn.textContent='送信完了';
+  }catch(err){
+    msg.classList.add('ng','show');
+    msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';
+    btn.disabled=false; btn.textContent='送信する';
+  }
+});
+</script>
+</body>
+</html>
