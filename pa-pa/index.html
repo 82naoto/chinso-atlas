@@ -95,7 +95,7 @@ button { font: inherit; cursor: pointer; transition: background 0.2s, transform 
   <header>
     <a class="brand" href="/chinso/">珍走ATLAS — CHINSO ATLAS</a>
     <h1>首都高PAナビ</h1>
-    <span class="sub">重なり防止＆経由地JCT限定化・バグ完全修正版。</span>
+    <span class="sub">近接JCT誤判定防止・アルゴリズム厳格化適用版。</span>
   </header>
 
   <div class="board">
@@ -362,18 +362,17 @@ $("go").addEventListener("click",()=>{
       const d = Math.pow(staticCoords[i][0] - vcoord[0], 2) + Math.pow(staticCoords[i][1] - vcoord[1], 2);
       if (d < minD) { minD = d; minIdx = i; }
     }
-    if (minD < 0.00015) { detectedVias.push({ id: vid, idx: minIdx }); }
+    // 【判定厳格化】閾値を 0.00015 から 0.00003 へ大幅縮小し、隣接する堀切と小菅の混同を完全にシャットアウト
+    if (minD < 0.00003) { detectedVias.push({ id: vid, idx: minIdx }); }
   });
   
   detectedVias.sort((a, b) => a.idx - b.idx);
   const activeVias = new Set(detectedVias.map(j => j.id));
   
-  // 【最重要修正】経由地リスト（seq）を構築する際、出発地と目的地以外の「途中にあるPA」を完全スキップ
   const seq = [{ name: NODES[s].label, road: NODES[s].road, type: "pa" }];
   detectedVias.forEach(item => {
     const n = NODES[item.id];
     if (!n.pa) {
-      // JCTのみをリストへ追加
       seq.push({ name: n.label, road: n.road, type: "jct" });
     }
   });
